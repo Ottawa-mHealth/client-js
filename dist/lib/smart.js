@@ -5,8 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.init = exports.buildTokenRequest = exports.ready = exports.onMessage = exports.isInPopUp = exports.isInFrame = exports.authorize = exports.getSecurityExtensions = exports.fetchWellKnownJson = exports.KEY = void 0;
 /* global window */
-const lib_1 = require("./lib");
 const Client_1 = require("./Client");
+const lib_1 = require("./lib");
 const settings_1 = require("./settings");
 Object.defineProperty(exports, "KEY", {
   enumerable: true,
@@ -103,7 +103,7 @@ async function authorize(env, params = {}) {
   if (Array.isArray(params)) {
     const urlISS = url.searchParams.get("iss") || url.searchParams.get("fhirServiceUrl");
     if (!urlISS) {
-      throw new Error('Passing in an "iss" url parameter is required if authorize ' + 'uses multiple configurations');
+      throw new Error('Passing in an "iss" url parameter is required if authorize ' + "uses multiple configurations");
     }
     // pick the right config
     const cfg = params.find(x => {
@@ -134,6 +134,7 @@ async function authorize(env, params = {}) {
     height,
     pkceMode,
     clientPublicKeySetUrl,
+    loginHintToken,
     // Two deprecated values to use as fall-back values later
     redirect_uri,
     client_id
@@ -157,7 +158,7 @@ async function authorize(env, params = {}) {
   launch = url.searchParams.get("launch") || launch;
   patientId = url.searchParams.get("patientId") || patientId;
   clientId = url.searchParams.get("clientId") || clientId;
-  // If there's still no clientId or redirectUri, check deprecated params 
+  // If there's still no clientId or redirectUri, check deprecated params
   if (!clientId) {
     clientId = client_id;
   }
@@ -192,7 +193,7 @@ async function authorize(env, params = {}) {
       completeInTarget = inFrame;
       // In this case we can't always make the best decision so ask devs
       // to be explicit in their configuration.
-      console.warn('Your app is being authorized from within an iframe or popup ' + 'window. Please be explicit and provide a "completeInTarget" ' + 'option. Use "true" to complete the authorization in the ' + 'same window, or "false" to try to complete it in the parent ' + 'or the opener window. See http://docs.smarthealthit.org/client-js/api.html');
+      console.warn("Your app is being authorized from within an iframe or popup " + 'window. Please be explicit and provide a "completeInTarget" ' + 'option. Use "true" to complete the authorization in the ' + 'same window, or "false" to try to complete it in the parent ' + "or the opener window. See http://docs.smarthealthit.org/client-js/api.html");
     }
   }
   // If `authorize` is called, make sure we clear any previous state (in case
@@ -260,7 +261,10 @@ async function authorize(env, params = {}) {
   if (launch) {
     redirectParams.push("launch=" + encodeURIComponent(launch));
   }
-  if (shouldIncludeChallenge(extensions.codeChallengeMethods.includes('S256'), pkceMode)) {
+  if (loginHintToken) {
+    redirectParams.push("login_hint_token=" + encodeURIComponent(loginHintToken));
+  }
+  if (shouldIncludeChallenge(extensions.codeChallengeMethods.includes("S256"), pkceMode)) {
     let codes = await env.security.generatePKCEChallenge();
     Object.assign(state, codes);
     await storage.set(stateKey, state);
@@ -424,7 +428,9 @@ async function ready(env, options = {}) {
         }, origin);
         window.close();
       }
-      return new Promise(() => {});
+      return new Promise(() => {
+        /* leave it pending!!! */
+      });
     }
   }
   url.searchParams.delete("complete");
@@ -566,7 +572,7 @@ async function buildTokenRequest(env, {
   }
   if (codeVerifier) {
     debug("Found state.codeVerifier, adding to the POST body");
-    // Note that the codeVerifier is ALREADY encoded properly  
+    // Note that the codeVerifier is ALREADY encoded properly
     requestOptions.body += "&code_verifier=" + codeVerifier;
   }
   return requestOptions;
@@ -628,7 +634,9 @@ async function init(env, authorizeOptions, readyOptions) {
     // want to return that from this promise chain because it is not a
     // Client instance. At the same time, if authorize fails, we do want to
     // pass the error to those waiting for a client instance.
-    return new Promise(() => {});
+    return new Promise(() => {
+      /* leave it pending!!! */
+    });
   });
 }
 exports.init = init;

@@ -60,7 +60,7 @@ export declare function ready(env: fhirclient.Adapter, options?: fhirclient.Read
  * Builds the token request options. Does not make the request, just
  * creates it's configuration and returns it in a Promise.
  */
-export declare function buildTokenRequest(env: fhirclient.Adapter, { code, state, clientPublicKeySetUrl, privateKey }: {
+export declare function buildTokenRequest(env: fhirclient.Adapter, { code, state, clientPublicKeySetUrl, privateKey, }: {
     /**
      * The `code` URL parameter received from the auth redirect
      */

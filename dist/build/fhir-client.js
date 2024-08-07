@@ -3418,8 +3418,8 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.init = exports.buildTokenRequest = exports.ready = exports.onMessage = exports.isInPopUp = exports.isInFrame = exports.authorize = exports.getSecurityExtensions = exports.fetchWellKnownJson = exports.KEY = void 0;
 /* global window */
-var lib_1 = __webpack_require__(/*! ./lib */ "./src/lib.ts");
 var Client_1 = __webpack_require__(/*! ./Client */ "./src/Client.ts");
+var lib_1 = __webpack_require__(/*! ./lib */ "./src/lib.ts");
 var settings_1 = __webpack_require__(/*! ./settings */ "./src/settings.ts");
 Object.defineProperty(exports, "KEY", ({
   enumerable: true,
@@ -3540,6 +3540,7 @@ function _authorize() {
       height,
       pkceMode,
       clientPublicKeySetUrl,
+      loginHintToken,
       redirect_uri,
       client_id,
       iss,
@@ -3581,7 +3582,7 @@ function _authorize() {
             _context.next = 6;
             break;
           }
-          throw new Error('Passing in an "iss" url parameter is required if authorize ' + 'uses multiple configurations');
+          throw new Error('Passing in an "iss" url parameter is required if authorize ' + "uses multiple configurations");
         case 6:
           // pick the right config
           cfg = params.find(function (x) {
@@ -3606,7 +3607,7 @@ function _authorize() {
         case 11:
           // ------------------------------------------------------------------------
           // Obtain input
-          clientSecret = params.clientSecret, fakeTokenResponse = params.fakeTokenResponse, encounterId = params.encounterId, target = params.target, width = params.width, height = params.height, pkceMode = params.pkceMode, clientPublicKeySetUrl = params.clientPublicKeySetUrl, redirect_uri = params.redirect_uri, client_id = params.client_id;
+          clientSecret = params.clientSecret, fakeTokenResponse = params.fakeTokenResponse, encounterId = params.encounterId, target = params.target, width = params.width, height = params.height, pkceMode = params.pkceMode, clientPublicKeySetUrl = params.clientPublicKeySetUrl, loginHintToken = params.loginHintToken, redirect_uri = params.redirect_uri, client_id = params.client_id;
           iss = params.iss, launch = params.launch, patientId = params.patientId, fhirServiceUrl = params.fhirServiceUrl, redirectUri = params.redirectUri, noRedirect = params.noRedirect, _params$scope = params.scope, scope = _params$scope === void 0 ? "" : _params$scope, clientId = params.clientId, completeInTarget = params.completeInTarget, clientPrivateJwk = params.clientPrivateJwk;
           storage = env.getStorage(); // For these, a url param takes precedence over inline option
           iss = url.searchParams.get("iss") || iss;
@@ -3614,7 +3615,7 @@ function _authorize() {
           launch = url.searchParams.get("launch") || launch;
           patientId = url.searchParams.get("patientId") || patientId;
           clientId = url.searchParams.get("clientId") || clientId;
-          // If there's still no clientId or redirectUri, check deprecated params 
+          // If there's still no clientId or redirectUri, check deprecated params
           if (!clientId) {
             clientId = client_id;
           }
@@ -3651,7 +3652,7 @@ function _authorize() {
               completeInTarget = inFrame;
               // In this case we can't always make the best decision so ask devs
               // to be explicit in their configuration.
-              console.warn('Your app is being authorized from within an iframe or popup ' + 'window. Please be explicit and provide a "completeInTarget" ' + 'option. Use "true" to complete the authorization in the ' + 'same window, or "false" to try to complete it in the parent ' + 'or the opener window. See http://docs.smarthealthit.org/client-js/api.html');
+              console.warn("Your app is being authorized from within an iframe or popup " + 'window. Please be explicit and provide a "completeInTarget" ' + 'option. Use "true" to complete the authorization in the ' + 'same window, or "false" to try to complete it in the parent ' + "or the opener window. See http://docs.smarthealthit.org/client-js/api.html");
             }
           }
           // If `authorize` is called, make sure we clear any previous state (in case
@@ -3749,35 +3750,38 @@ function _authorize() {
           if (launch) {
             redirectParams.push("launch=" + encodeURIComponent(launch));
           }
-          if (!shouldIncludeChallenge(extensions.codeChallengeMethods.includes('S256'), pkceMode)) {
-            _context.next = 75;
+          if (loginHintToken) {
+            redirectParams.push("login_hint_token=" + encodeURIComponent(loginHintToken));
+          }
+          if (!shouldIncludeChallenge(extensions.codeChallengeMethods.includes("S256"), pkceMode)) {
+            _context.next = 76;
             break;
           }
-          _context.next = 69;
+          _context.next = 70;
           return env.security.generatePKCEChallenge();
-        case 69:
+        case 70:
           codes = _context.sent;
           Object.assign(state, codes);
-          _context.next = 73;
+          _context.next = 74;
           return storage.set(stateKey, state);
-        case 73:
+        case 74:
           redirectParams.push("code_challenge=" + state.codeChallenge); // note that the challenge is ALREADY encoded properly
           redirectParams.push("code_challenge_method=S256");
-        case 75:
+        case 76:
           redirectUrl = state.authorizeUri + "?" + redirectParams.join("&");
           if (!noRedirect) {
-            _context.next = 78;
+            _context.next = 79;
             break;
           }
           return _context.abrupt("return", redirectUrl);
-        case 78:
+        case 79:
           if (!(target && isBrowser())) {
-            _context.next = 87;
+            _context.next = 88;
             break;
           }
-          _context.next = 81;
+          _context.next = 82;
           return (0, lib_1.getTargetWindow)(target, width, height);
-        case 81:
+        case 82:
           win = _context.sent;
           if (win !== self) {
             try {
@@ -3802,12 +3806,12 @@ function _authorize() {
             self.location.href = redirectUrl;
           }
           return _context.abrupt("return");
-        case 87:
-          _context.next = 89;
+        case 88:
+          _context.next = 90;
           return env.redirect(redirectUrl);
-        case 89:
-          return _context.abrupt("return", _context.sent);
         case 90:
+          return _context.abrupt("return", _context.sent);
+        case 91:
         case "end":
           return _context.stop();
       }
@@ -3971,7 +3975,9 @@ function _ready() {
             }, origin);
             window.close();
           }
-          return _context2.abrupt("return", new Promise(function () {}));
+          return _context2.abrupt("return", new Promise(function () {
+            /* leave it pending!!! */
+          }));
         case 29:
           url.searchParams.delete("complete");
           // Do we have to remove the `code` and `state` params from the URL?
@@ -4155,7 +4161,7 @@ function _buildTokenRequest() {
         case 32:
           if (codeVerifier) {
             debug("Found state.codeVerifier, adding to the POST body");
-            // Note that the codeVerifier is ALREADY encoded properly  
+            // Note that the codeVerifier is ALREADY encoded properly
             requestOptions.body += "&code_verifier=" + codeVerifier;
           }
           return _context3.abrupt("return", requestOptions);
@@ -4249,7 +4255,9 @@ function _init() {
             // want to return that from this promise chain because it is not a
             // Client instance. At the same time, if authorize fails, we do want to
             // pass the error to those waiting for a client instance.
-            return new Promise(function () {});
+            return new Promise(function () {
+              /* leave it pending!!! */
+            });
           }));
         case 18:
         case "end":
